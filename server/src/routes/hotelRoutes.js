@@ -14,12 +14,12 @@ const router = express.Router();
 
 // Public route - no authentication required
 router.get("/public", getPublicHotels);
+router.get("/", getHotels);
 
 // Protect all other routes - must be authenticated
 router.use(protect);
 
-// Get all hotels - Both Super Admin and Hotel Admin can access
-router.route("/").get(getHotels);
+
 
 // Get hotel by ID - Both Super Admin and Hotel Admin can access
 router.route("/:id").get(getHotelById);
