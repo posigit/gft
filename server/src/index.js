@@ -27,6 +27,7 @@ dotenv.config();
 
 // Create Express app
 const app = express();
+app.set('trust proxy', 1);
 
 // Middleware
 app.use(express.json());
