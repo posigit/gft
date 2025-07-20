@@ -37,6 +37,7 @@ app.use(cors({
     'http://localhost:3000',
     'https://gft-posigits-projects.vercel.app',
     'https://gft-git-main-posigits-projects.vercel.app'
+    'https://gft-xi.vercel.app/'
   ],
   credentials: true
 }));
