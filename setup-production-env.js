@@ -13,7 +13,7 @@ const rl = readline.createInterface({
 
 // Default values
 const defaultValues = {
-  REACT_APP_API_URL: 'https://presken-gft-api.onrender.com/api',
+  REACT_APP_API_URL: 'https://gft-ezk0.onrender.com/api',
   SKIP_PREFLIGHT_CHECK: 'true'
 };
 
