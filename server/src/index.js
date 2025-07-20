@@ -32,9 +32,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.FRONTEND_URL || '*'
-    : 'http://localhost:3000',
+   origin: [
+    'http://localhost:3000',
+    'https://gft-posigits-projects.vercel.app',
+    'https://gft-git-main-posigits-projects.vercel.app'
+  ],
   credentials: true
 }));
 app.use(
