@@ -1,0 +1,181 @@
+# PRESKEN GUEST FEEDBACK TRACKER (GFT) - PROJECT DOCUMENTATION
+
+## PROJECT OVERVIEW
+Presken GFT is a hotel guest feedback management system that allows hotels to collect, track, and analyze guest feedback. The application provides different interfaces for Super Admins (who manage multiple hotels) and Hotel Admins (who manage a single hotel).
+
+## FRONTEND ARCHITECTURE
+The frontend is built with React, using TypeScript for type safety. Key libraries include:
+- React Router for navigation
+- Chart.js for data visualization
+- React Icons for UI icons
+- Context API for state management
+
+## USER ROLES
+1. **Super Admin**: Can manage multiple hotels, view aggregated reports
+2. **Hotel Admin**: Can manage a single hotel, view hotel-specific reports
+
+## DATABASE SCHEMA
+
+### Users
+- id (PK)
+- name
+- email
+- password (hashed)
+- role (enum: SUPER_ADMIN, HOTEL_ADMIN)
+- hotelId (FK, nullable for Super Admin)
+- createdAt
+- updatedAt
+
+### Hotels
+- id (PK)
+- name
+- location
+- address
+- createdAt
+- updatedAt
+
+### Feedback
+- id (PK)
+- hotelId (FK)
+- guestName
+- guestEmail (optional)
+- guestPhone (optional)
+- roomNumber (optional)
+- type (enum: COMPLAINT, SUGGESTION, PRAISE)
+- category (FK)
+- subject
+- message
+- rating (1-5)
+- status (enum: PENDING, IN_PROGRESS, RESOLVED, ESCALATED)
+- assignedTo (FK, nullable)
+- createdAt
+- updatedAt
+
+### FeedbackCategories
+- id (PK)
+- name
+- hotelId (FK, nullable if global)
+- createdAt
+- updatedAt
+
+### FeedbackResponses
+- id (PK)
+- feedbackId (FK)
+- respondedBy (FK to Users)
+- message
+- createdAt
+- updatedAt
+
+## API ENDPOINTS
+
+### Authentication
+- POST /api/auth/login - User login
+- POST /api/auth/logout - User logout
+- GET /api/auth/me - Get current user info
+
+### Users
+- GET /api/users - Get all users (Super Admin only)
+- POST /api/users - Create new user
+- GET /api/users/:id - Get specific user
+- PUT /api/users/:id - Update user
+- DELETE /api/users/:id - Delete user
+- PUT /api/users/:id/password - Update password
+
+### Hotels
+- GET /api/hotels - Get all hotels
+- POST /api/hotels - Create new hotel (Super Admin only)
+- GET /api/hotels/:id - Get specific hotel
+- PUT /api/hotels/:id - Update hotel
+- DELETE /api/hotels/:id - Delete hotel
+
+### Feedback
+- GET /api/feedback - Get all feedback (filtered by hotel for Hotel Admin)
+- POST /api/feedback - Create new feedback
+- GET /api/feedback/:id - Get specific feedback
+- PUT /api/feedback/:id - Update feedback
+- DELETE /api/feedback/:id - Delete feedback
+- PUT /api/feedback/:id/status - Update feedback status
+- POST /api/feedback/:id/responses - Add response to feedback
+
+### Categories
+- GET /api/categories - Get all categories
+- POST /api/categories - Create new category
+- PUT /api/categories/:id - Update category
+- DELETE /api/categories/:id - Delete category
+
+### Dashboard/Reports
+- GET /api/dashboard/stats - Get dashboard statistics
+  - Query params: hotelId (optional), from (date), to (date)
+- GET /api/reports/export - Export reports (Excel/PDF)
+  - Query params: format, hotelId (optional), from (date), to (date)
+
+## API RESPONSE FORMAT
+All API endpoints should follow a consistent response format:
+
+```javascript
+{
+  success: boolean,
+  data: any | null,
+  error: string | null
+}
+```
+
+## AUTHENTICATION & AUTHORIZATION
+- JWT-based authentication
+- Token expiration: 24 hours
+- Refresh token mechanism for extended sessions
+- Role-based access control for endpoints
+
+## BACKEND IMPLEMENTATION NOTES
+
+### Technologies to Consider
+- Node.js with Express for the API
+- MongoDB or PostgreSQL for database
+- Mongoose (for MongoDB) or Sequelize/Prisma (for SQL) as ORM
+- JWT for authentication
+- bcrypt for password hashing
+- Joi or Zod for request validation
+- Multer for file uploads (QR code generation)
+- nodemailer for email notifications
+
+### Security Considerations
+- Implement rate limiting for login attempts
+- Sanitize all user inputs
+- Implement CORS with appropriate origins
+- Use environment variables for sensitive information
+- Validate and sanitize query parameters
+
+### QR Code Generation
+- The backend should provide an endpoint to generate QR codes for hotels
+- QR codes should direct to a feedback form specific to the hotel
+- Consider using a library like `qrcode` for Node.js
+
+### Reporting Features
+- Implement aggregation pipelines for MongoDB or complex SQL queries for PostgreSQL
+- Consider caching frequently accessed report data
+- Implement pagination for large data sets
+- Support filtering by date ranges and hotel
+
+### Real-time Features (Optional)
+- Consider Socket.io for real-time notifications
+- Implement WebSockets for live dashboard updates
+
+## DEPLOYMENT CONSIDERATIONS
+- Set up proper environment variables
+- Implement database backups
+- Consider containerization with Docker
+- Set up CI/CD pipelines
+- Implement monitoring and logging
+
+## TESTING STRATEGY
+- Unit tests for API endpoints
+- Integration tests for complex workflows
+- End-to-end tests for critical paths
+- Load testing for reporting endpoints
+
+## FUTURE ENHANCEMENTS
+- Mobile app for guests to provide feedback
+- AI-powered sentiment analysis for feedback
+- Integration with hotel PMS systems
+- Multi-language support
+- Advanced analytics and trend identification

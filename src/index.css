@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(to right bottom, #f9faff, #eae6fc, #f5fff6);
+  min-height: 100vh;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* Custom utility classes */
+@layer components {
+  .card {
+    @apply bg-white rounded-[20px] p-6 shadow-md;
+  }
+
+  .btn {
+    @apply rounded-xl py-3 px-6 font-medium transition-all duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-ghost {
+    @apply border border-primary text-primary bg-transparent hover:bg-primary/5;
+  }
+
+  .input-field {
+    @apply bg-[#F6F6F6] rounded-xl p-3 text-sm w-full focus:outline-none focus:ring-2 focus:ring-primary/30;
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "designSystem": {
+    "name": "Soft Gradient UI - Task Manager",
+    "theme": {
+      "primaryColor": "#7A4FFF",
+      "secondaryColor": "#FF8A5C",
+      "background": {
+        "type": "gradient",
+        "colors": ["#F9FAFF", "#EAE6FC", "#F5FFF6"]
+      },
+      "text": {
+        "heading": "#2B2B2B",
+        "subtext": "#777777",
+        "white": "#FFFFFF"
+      },
+      "accentColors": ["#FFD36A", "#FFA3A3", "#76D7C4"]
+    },
+    "typography": {
+      "fontFamily": "Poppins, sans-serif",
+      "fontSizes": {
+        "heading": "22px",
+        "subheading": "18px",
+        "body": "14px",
+        "caption": "12px"
+      },
+      "fontWeights": {
+        "heading": 600,
+        "body": 400,
+        "bold": 700
+      },
+      "lineHeights": {
+        "default": "1.4em",
+        "heading": "1.2em"
+      }
+    },
+    "components": {
+      "button": {
+        "borderRadius": "12px",
+        "padding": "14px 24px",
+        "shadow": "0px 8px 20px rgba(122, 79, 255, 0.25)",
+        "variants": {
+          "primary": {
+            "background": "#7A4FFF",
+            "color": "#FFFFFF"
+          },
+          "ghost": {
+            "background": "transparent",
+            "border": "1px solid #7A4FFF",
+            "color": "#7A4FFF"
+          }
+        }
+      },
+      "card": {
+        "borderRadius": "20px",
+        "padding": "24px",
+        "background": "#FFFFFF",
+        "shadow": "0px 4px 16px rgba(0, 0, 0, 0.05)"
+      },
+      "inputField": {
+        "borderRadius": "12px",
+        "background": "#F6F6F6",
+        "padding": "12px 16px",
+        "fontSize": "14px"
+      },
+      "progressRing": {
+        "thickness": "6px",
+        "trackColor": "#EFEFEF",
+        "progressColor": "#7A4FFF"
+      },
+      "tabs": {
+        "layout": "horizontal",
+        "selectedStyle": {
+          "background": "#EDE9FE",
+          "color": "#7A4FFF",
+          "borderRadius": "10px"
+        },
+        "unselectedStyle": {
+          "color": "#A1A1A1",
+          "background": "transparent"
+        }
+      },
+      "navBar": {
+        "type": "bottom",
+        "background": "#FFFFFF",
+        "items": {
+          "iconsOnly": true,
+          "iconColor": "#B8B8D1",
+          "activeColor": "#7A4FFF"
+        }
+      },
+      "modals": {
+        "style": "rounded",
+        "elevation": "high",
+        "backdrop": "rgba(0,0,0,0.3)"
+      },
+      "avatars": {
+        "shape": "circular",
+        "size": "48px",
+        "shadow": "0px 4px 12px rgba(0, 0, 0, 0.1)"
+      },
+      "dateSelector": {
+        "format": "dd MMM",
+        "style": "pill",
+        "selectedBackground": "#7A4FFF",
+        "unselectedBackground": "#F0F0F0"
+      }
+    },
+    "layout": {
+      "grid": {
+        "columns": 12,
+        "gutter": "16px",
+        "padding": "24px"
+      },
+      "cardSpacing": "20px",
+      "sectionSpacing": "40px",
+      "alignment": {
+        "horizontal": "center",
+        "vertical": "top"
+      }
+    },
+    "animation": {
+      "type": "ease-in-out",
+      "duration": "0.3s",
+      "effects": ["fade", "slide-up", "scale"]
+    },
+    "icons": {
+      "style": "line",
+      "pack": "custom / minimal",
+      "color": "#7A4FFF",
+      "size": "20px"
+    },
+    "illustrations": {
+      "style": "3D modern flat",
+      "tone": "playful, professional",
+      "positioning": "centered, floating with shadows"
+    },
+    "accessibility": {
+      "contrast": "AA",
+      "focusState": {
+        "outline": "2px solid #7A4FFF",
+        "radius": "12px"
+      }
+    }
+  }
+}
