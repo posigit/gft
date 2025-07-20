@@ -34,10 +34,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
    origin: [
-    'http://localhost:3000',
-    'https://gft-posigits-projects.vercel.app',
-    'https://gft-git-main-posigits-projects.vercel.app',
-    'https://gft-xi.vercel.app/'
+       "http://localhost:3000",
+            "https://gft-posigits-projects.vercel.app",
+            "https://gft-git-main-posigits-projects.vercel.app",
+            "https://gft-xi.vercel.app"
   ],
   credentials: true
 }));
