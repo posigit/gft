@@ -4,7 +4,7 @@
   "description": "Presken Centralized Guest Feedback Tracker - A comprehensive solution for hotel guest feedback management",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
