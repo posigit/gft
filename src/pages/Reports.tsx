@@ -73,7 +73,11 @@ const Reports: React.FC = () => {
             ? user.hotelId
             : selectedHotel || undefined;
 
-        const statsResponse = await api.dashboard.getStats(hotelId);
+        const statsResponse = await api.dashboard.getStats(
+          hotelId,
+          dateRange.from || undefined,
+          dateRange.to || undefined
+        );
 
         if (statsResponse.success && statsResponse.data) {
           setStats(statsResponse.data);
@@ -89,7 +93,7 @@ const Reports: React.FC = () => {
     };
 
     fetchData();
-  }, [user, selectedHotel]);
+  }, [user, selectedHotel, dateRange.from, dateRange.to]);
 
   // Handle hotel selection
   const handleHotelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -109,15 +113,71 @@ const Reports: React.FC = () => {
   };
 
   // Export to Excel
-  const exportToExcel = () => {
-    // In a real app, this would generate an Excel file
-    alert("Export to Excel functionality would be implemented here");
+  const exportToExcel = async () => {
+    try {
+      setIsLoading(true);
+      const hotelId =
+        user?.role === UserRole.HOTEL_ADMIN
+          ? user.hotelId
+          : selectedHotel || undefined;
+
+      const blob = await api.export.toExcel({
+        hotelId,
+        dateFrom: dateRange.from || undefined,
+        dateTo: dateRange.to || undefined,
+      });
+
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `feedback-report-${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Export error:", err);
+      setError("Failed to export data to Excel");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Export to PDF
-  const exportToPDF = () => {
-    // In a real app, this would generate a PDF file
-    alert("Export to PDF functionality would be implemented here");
+  const exportToPDF = async () => {
+    try {
+      setIsLoading(true);
+      const hotelId =
+        user?.role === UserRole.HOTEL_ADMIN
+          ? user.hotelId
+          : selectedHotel || undefined;
+
+      const blob = await api.export.toPDF({
+        hotelId,
+        dateFrom: dateRange.from || undefined,
+        dateTo: dateRange.to || undefined,
+      });
+
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `feedback-report-${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Export error:", err);
+      setError("Failed to export data to PDF");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Prepare data for pie chart
@@ -127,9 +187,15 @@ const Reports: React.FC = () => {
       {
         data: stats
           ? [
-              stats.feedbackByType?.[FeedbackType.COMPLAINT] || stats.byType?.complaint || 0,
-              stats.feedbackByType?.[FeedbackType.SUGGESTION] || stats.byType?.suggestion || 0,
-              stats.feedbackByType?.[FeedbackType.PRAISE] || stats.byType?.praise || 0,
+              stats.feedbackByType?.[FeedbackType.COMPLAINT] ||
+                stats.byType?.complaint ||
+                0,
+              stats.feedbackByType?.[FeedbackType.SUGGESTION] ||
+                stats.byType?.suggestion ||
+                0,
+              stats.feedbackByType?.[FeedbackType.PRAISE] ||
+                stats.byType?.praise ||
+                0,
             ]
           : [0, 0, 0],
         backgroundColor: ["#FFA3A3", "#FFD36A", "#76D7C4"],
@@ -145,18 +211,21 @@ const Reports: React.FC = () => {
       {
         data: stats
           ? [
-              stats.feedbackByStatus?.[FeedbackStatus.PENDING] || stats.byStatus?.pending || 0,
-              stats.feedbackByStatus?.[FeedbackStatus.IN_PROGRESS] || stats.byStatus?.inProgress || 0,
-              stats.feedbackByStatus?.[FeedbackStatus.RESOLVED] || stats.byStatus?.resolved || 0,
-              stats.feedbackByStatus?.[FeedbackStatus.ESCALATED] || stats.byStatus?.escalated || 0,
+              stats.feedbackByStatus?.[FeedbackStatus.PENDING] ||
+                stats.byStatus?.pending ||
+                0,
+              stats.feedbackByStatus?.[FeedbackStatus.IN_PROGRESS] ||
+                stats.byStatus?.inProgress ||
+                0,
+              stats.feedbackByStatus?.[FeedbackStatus.RESOLVED] ||
+                stats.byStatus?.resolved ||
+                0,
+              stats.feedbackByStatus?.[FeedbackStatus.ESCALATED] ||
+                stats.byStatus?.escalated ||
+                0,
             ]
           : [0, 0, 0, 0],
-        backgroundColor: [
-          "#FFD36A",
-          "#7A4FFF",
-          "#76D7C4",
-          "#FFA3A3",
-        ],
+        backgroundColor: ["#FFD36A", "#7A4FFF", "#76D7C4", "#FFA3A3"],
         borderWidth: 0,
       },
     ],
@@ -183,13 +252,12 @@ const Reports: React.FC = () => {
     },
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Create a loading overlay for data sections only
+  const LoadingOverlay = () => (
+    <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>
+  );
 
   if (error) {
     return (
@@ -217,13 +285,12 @@ const Reports: React.FC = () => {
           <p className="text-subtext">
             {user?.role === UserRole.SUPER_ADMIN
               ? selectedHotel
-                ? `Reports for ${hotels.find(h => h.id === selectedHotel)?.name || selectedHotel}`
+                ? `Reports for ${
+                    hotels.find((h) => h.id === selectedHotel)?.name ||
+                    selectedHotel
+                  }`
                 : "Reports for All Hotels"
-              : `Reports for ${
-                  user?.hotelId
-                    ? "your hotel"
-                    : "your hotel"
-                }`}
+              : `Reports for ${user?.hotelId ? "your hotel" : "your hotel"}`}
           </p>
         </div>
 
@@ -233,15 +300,7 @@ const Reports: React.FC = () => {
             className="btn btn-ghost flex items-center justify-center"
           >
             <IconWrapper icon={FiDownload} className="mr-2" />
-            Export Excel
-          </button>
-
-          <button
-            onClick={exportToPDF}
-            className="btn btn-ghost flex items-center justify-center"
-          >
-            <IconWrapper icon={FiDownload} className="mr-2" />
-            Export PDF
+            Export
           </button>
 
           <button
@@ -330,7 +389,8 @@ const Reports: React.FC = () => {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+        {isLoading && <LoadingOverlay />}
         <div className="card flex items-center">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
             <IconWrapper icon={FiBarChart2} className="text-primary text-xl" />
@@ -350,7 +410,9 @@ const Reports: React.FC = () => {
           <div>
             <p className="text-subtext text-sm">Complaints</p>
             <h3 className="text-2xl font-semibold text-heading">
-              {stats?.feedbackByType?.[FeedbackType.COMPLAINT] || stats?.byType?.complaint || 0}
+              {stats?.feedbackByType?.[FeedbackType.COMPLAINT] ||
+                stats?.byType?.complaint ||
+                0}
             </h3>
           </div>
         </div>
@@ -365,7 +427,9 @@ const Reports: React.FC = () => {
           <div>
             <p className="text-subtext text-sm">Suggestions</p>
             <h3 className="text-2xl font-semibold text-heading">
-              {stats?.feedbackByType?.[FeedbackType.SUGGESTION] || stats?.byType?.suggestion || 0}
+              {stats?.feedbackByType?.[FeedbackType.SUGGESTION] ||
+                stats?.byType?.suggestion ||
+                0}
             </h3>
           </div>
         </div>
@@ -377,14 +441,17 @@ const Reports: React.FC = () => {
           <div>
             <p className="text-subtext text-sm">Praise</p>
             <h3 className="text-2xl font-semibold text-heading">
-              {stats?.feedbackByType?.[FeedbackType.PRAISE] || stats?.byType?.praise || 0}
+              {stats?.feedbackByType?.[FeedbackType.PRAISE] ||
+                stats?.byType?.praise ||
+                0}
             </h3>
           </div>
         </div>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
+        {isLoading && <LoadingOverlay />}
         <div className="card">
           <h3 className="text-lg font-medium text-heading mb-4">
             Feedback by Type
@@ -397,21 +464,27 @@ const Reports: React.FC = () => {
               <div className="w-4 h-4 bg-red-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">Complaints</p>
               <p className="font-medium">
-                {stats?.feedbackByType?.[FeedbackType.COMPLAINT] || stats?.byType?.complaint || 0}
+                {stats?.feedbackByType?.[FeedbackType.COMPLAINT] ||
+                  stats?.byType?.complaint ||
+                  0}
               </p>
             </div>
             <div>
               <div className="w-4 h-4 bg-yellow-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">Suggestions</p>
               <p className="font-medium">
-                {stats?.feedbackByType?.[FeedbackType.SUGGESTION] || stats?.byType?.suggestion || 0}
+                {stats?.feedbackByType?.[FeedbackType.SUGGESTION] ||
+                  stats?.byType?.suggestion ||
+                  0}
               </p>
             </div>
             <div>
               <div className="w-4 h-4 bg-green-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">Praise</p>
               <p className="font-medium">
-                {stats?.feedbackByType?.[FeedbackType.PRAISE] || stats?.byType?.praise || 0}
+                {stats?.feedbackByType?.[FeedbackType.PRAISE] ||
+                  stats?.byType?.praise ||
+                  0}
               </p>
             </div>
           </div>
@@ -429,28 +502,36 @@ const Reports: React.FC = () => {
               <div className="w-4 h-4 bg-yellow-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">Pending</p>
               <p className="font-medium">
-                {stats?.feedbackByStatus?.[FeedbackStatus.PENDING] || stats?.byStatus?.pending || 0}
+                {stats?.feedbackByStatus?.[FeedbackStatus.PENDING] ||
+                  stats?.byStatus?.pending ||
+                  0}
               </p>
             </div>
             <div>
               <div className="w-4 h-4 bg-blue-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">In Progress</p>
               <p className="font-medium">
-                {stats?.feedbackByStatus?.[FeedbackStatus.IN_PROGRESS] || stats?.byStatus?.inProgress || 0}
+                {stats?.feedbackByStatus?.[FeedbackStatus.IN_PROGRESS] ||
+                  stats?.byStatus?.inProgress ||
+                  0}
               </p>
             </div>
             <div>
               <div className="w-4 h-4 bg-green-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">Resolved</p>
               <p className="font-medium">
-                {stats?.feedbackByStatus?.[FeedbackStatus.RESOLVED] || stats?.byStatus?.resolved || 0}
+                {stats?.feedbackByStatus?.[FeedbackStatus.RESOLVED] ||
+                  stats?.byStatus?.resolved ||
+                  0}
               </p>
             </div>
             <div>
               <div className="w-4 h-4 bg-red-300 rounded-full mx-auto"></div>
               <p className="text-xs mt-1 text-subtext">Escalated</p>
               <p className="font-medium">
-                {stats?.feedbackByStatus?.[FeedbackStatus.ESCALATED] || stats?.byStatus?.escalated || 0}
+                {stats?.feedbackByStatus?.[FeedbackStatus.ESCALATED] ||
+                  stats?.byStatus?.escalated ||
+                  0}
               </p>
             </div>
           </div>
@@ -459,7 +540,8 @@ const Reports: React.FC = () => {
 
       {/* Hotel Performance (Super Admin Only) */}
       {user?.role === UserRole.SUPER_ADMIN && !selectedHotel && (
-        <div className="card">
+        <div className="card relative">
+          {isLoading && <LoadingOverlay />}
           <h3 className="text-lg font-medium text-heading mb-4">
             Hotel Performance
           </h3>

@@ -133,7 +133,7 @@ const Login: React.FC = () => {
               <p>
                 For demo purposes:
                 <br />
-                Super Admin: admin@presken.com / admin123
+                Hotel Admin: reliance@presken.com / reliance123
                 <br />
                 Hotel Admin: castle@presken.com / castle123
                 <br />

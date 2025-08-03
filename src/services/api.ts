@@ -279,7 +279,7 @@ export const api = {
             );
           if (filters.type)
             params.append(
-              "feedbackType",
+              "type",
               api.feedback._convertTypeToBackend(filters.type as FeedbackType)
             );
           if (filters.rating) {
@@ -615,11 +615,15 @@ export const api = {
   dashboard: {
     // Get dashboard statistics
     getStats: async (
-      hotelId?: string
+      hotelId?: string,
+      startDate?: string,
+      endDate?: string
     ): Promise<ApiResponse<DashboardStats>> => {
       try {
         const params = new URLSearchParams();
         if (hotelId) params.append("hotelId", hotelId);
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
 
         const response = await axiosInstance.get(
           `/dashboard/stats?${params.toString()}`
@@ -638,12 +642,24 @@ export const api = {
     // Get feedback trends
     getTrends: async (
       hotelId?: string,
-      days: number = 7
+      days: number = 7,
+      startDate?: string,
+      endDate?: string
     ): Promise<ApiResponse<any>> => {
       try {
         const params = new URLSearchParams();
         if (hotelId) params.append("hotelId", hotelId);
-        params.append("days", days.toString());
+        
+        // If start and end dates are provided, use them instead of days
+        if (startDate && endDate) {
+          params.append("startDate", startDate);
+          params.append("endDate", endDate);
+          console.log(`API requesting trends from ${startDate} to ${endDate}`);
+        } else {
+          // Otherwise use the days parameter
+          params.append("days", days.toString());
+          console.log(`API requesting trends for last ${days} days`);
+        }
 
         const response = await axiosInstance.get(
           `/dashboard/trends?${params.toString()}`
@@ -833,13 +849,30 @@ export const api = {
       hotelId?: string;
       dateFrom?: string;
       dateTo?: string;
+      type?: string;
+      status?: FeedbackStatus;
+      rating?: number;
     }): Promise<Blob> => {
       try {
         const params = new URLSearchParams();
         if (filters) {
-          if (filters.hotelId) params.append("hotelId", filters.hotelId);
-          if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
-          if (filters.dateTo) params.append("dateTo", filters.dateTo);
+          if (filters.hotelId) params.append("hotel", filters.hotelId);
+          if (filters.dateFrom) params.append("startDate", filters.dateFrom);
+          if (filters.dateTo) params.append("endDate", filters.dateTo);
+          if (filters.type)
+            params.append(
+              "feedbackType",
+              api.feedback._convertTypeToBackend(filters.type as FeedbackType)
+            );
+          if (filters.status)
+            params.append(
+              "status",
+              api.feedback._convertStatusToBackend(filters.status)
+            );
+          if (filters.rating) {
+            params.append("minRating", filters.rating.toString());
+            params.append("maxRating", filters.rating.toString());
+          }
         }
 
         const response = await axiosInstance.get(
@@ -862,13 +895,30 @@ export const api = {
       hotelId?: string;
       dateFrom?: string;
       dateTo?: string;
+      type?: string;
+      status?: FeedbackStatus;
+      rating?: number;
     }): Promise<Blob> => {
       try {
         const params = new URLSearchParams();
         if (filters) {
-          if (filters.hotelId) params.append("hotelId", filters.hotelId);
-          if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
-          if (filters.dateTo) params.append("dateTo", filters.dateTo);
+          if (filters.hotelId) params.append("hotel", filters.hotelId);
+          if (filters.dateFrom) params.append("startDate", filters.dateFrom);
+          if (filters.dateTo) params.append("endDate", filters.dateTo);
+          if (filters.type)
+            params.append(
+              "feedbackType",
+              api.feedback._convertTypeToBackend(filters.type as FeedbackType)
+            );
+          if (filters.status)
+            params.append(
+              "status",
+              api.feedback._convertStatusToBackend(filters.status)
+            );
+          if (filters.rating) {
+            params.append("minRating", filters.rating.toString());
+            params.append("maxRating", filters.rating.toString());
+          }
         }
 
         const response = await axiosInstance.get(

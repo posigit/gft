@@ -168,10 +168,55 @@ const FeedbackList: React.FC = () => {
     navigate(`/feedback/${id}`);
   };
 
-  // Export to CSV
-  const exportToCSV = () => {
-    // In a real app, this would generate a CSV file
-    alert("Export functionality would be implemented here");
+  // Export to Excel
+  const exportToExcel = async () => {
+    try {
+      setIsLoading(true);
+
+      // Prepare filters for export - include all current filters
+      const exportFilters: any = {};
+
+      // If user is hotel admin, only show their hotel's feedback
+      if (user?.role === UserRole.HOTEL_ADMIN && user.hotelId) {
+        exportFilters.hotelId = user.hotelId;
+      } else if (filters.hotelId) {
+        exportFilters.hotelId = filters.hotelId;
+      }
+
+      // Include all filter parameters
+      if (filters.dateFrom) exportFilters.dateFrom = filters.dateFrom;
+      if (filters.dateTo) exportFilters.dateTo = filters.dateTo;
+      if (filters.type) exportFilters.type = filters.type;
+      if (filters.status) exportFilters.status = filters.status;
+      if (filters.rating) exportFilters.rating = parseInt(filters.rating);
+
+      // Call the API to get the Excel file
+      const blob = await api.export.toExcel(exportFilters);
+
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary link element
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `feedback_export_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+
+      // Append to body, click, and clean up
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Release the URL object
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export error:", error);
+      setError("Failed to export data to Excel");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Pagination
@@ -201,11 +246,11 @@ const FeedbackList: React.FC = () => {
 
         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <button
-            onClick={exportToCSV}
+            onClick={exportToExcel}
             className="btn btn-ghost flex items-center justify-center"
           >
             <IconWrapper icon={FiDownload} className="mr-2" />
-            Export
+            Export Excel
           </button>
         </div>
       </div>
