@@ -128,7 +128,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const getFeedbackTrends = asyncHandler(async (req, res) => {
-  const { hotel, period = "monthly", limit = 6 } = req.query;
+  const { hotel, period = "monthly", limit = 6, startDate, endDate } = req.query;
 
   // Build base query
   const query = {};
@@ -140,12 +140,40 @@ const getFeedbackTrends = asyncHandler(async (req, res) => {
     query.hotel = hotel;
   }
 
+  // Apply date range filter if provided
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) {
+      query.createdAt.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      const endDateObj = new Date(endDate);
+      endDateObj.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = endDateObj;
+    }
+  }
+
   // Determine grouping format based on period
   let dateFormat;
   let dateField;
   let sortField;
+  
+  // Set effective period and limit based on date range
+  let effectivePeriod = period;
+  let effectiveLimit = parseInt(limit);
+  
+  // If date range is provided, force daily period and increase limit
+  if (startDate && endDate) {
+    effectivePeriod = "daily";
+    // Calculate days between dates to ensure we get all days
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    effectiveLimit = Math.max(daysDiff, parseInt(limit));
+    console.log(`Using daily period with limit ${effectiveLimit} for date range ${startDate} to ${endDate}`);
+  }
 
-  switch (period) {
+  switch (effectivePeriod) {
     case "daily":
       dateFormat = "%Y-%m-%d";
       dateField = { $dateToString: { format: dateFormat, date: "$createdAt" } };
@@ -183,8 +211,8 @@ const getFeedbackTrends = asyncHandler(async (req, res) => {
       },
     },
     { $sort: { [sortField]: -1 } },
-    { $limit: parseInt(limit) },
-    { $sort: { [sortField]: 1 } }, // Re-sort in ascending order for charting
+    { $limit: effectiveLimit },
+    { $sort: { [sortField]: 1 } },
   ]);
 
   // Format data for frontend charts
