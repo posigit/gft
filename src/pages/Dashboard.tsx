@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/api";
 import {
@@ -48,6 +49,7 @@ ChartJS.register(
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [trendData, setTrendData] = useState<{
     labels: string[];
@@ -72,10 +74,11 @@ const Dashboard: React.FC = () => {
         // Always use the current user's hotel ID for filtering
         // For hotel admin, this is their assigned hotel
         // For super admin viewing their own dashboard, we'll use undefined to show all hotels
-        const hotelId = user?.role === UserRole.HOTEL_ADMIN ? user.hotelId : undefined;
-        
-        console.log('Current user:', user);
-        console.log('Using hotelId for filtering:', hotelId);
+        const hotelId =
+          user?.role === UserRole.HOTEL_ADMIN ? user.hotelId : undefined;
+
+        console.log("Current user:", user);
+        console.log("Using hotelId for filtering:", hotelId);
 
         // Fetch dashboard stats
         const statsResponse = await api.dashboard.getStats(hotelId);
@@ -84,14 +87,23 @@ const Dashboard: React.FC = () => {
         const endDate = new Date();
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - 6); // Last 7 days including today
-        
-        const formattedStartDate = startDate.toISOString().split('T')[0];
-        const formattedEndDate = endDate.toISOString().split('T')[0];
-        
-        console.log(`Fetching trend data from ${formattedStartDate} to ${formattedEndDate} for hotelId: ${hotelId || 'all hotels'}`);
-        
+
+        const formattedStartDate = startDate.toISOString().split("T")[0];
+        const formattedEndDate = endDate.toISOString().split("T")[0];
+
+        console.log(
+          `Fetching trend data from ${formattedStartDate} to ${formattedEndDate} for hotelId: ${
+            hotelId || "all hotels"
+          }`
+        );
+
         // Always pass the hotelId to ensure proper filtering
-        const trendsResponse = await api.dashboard.getTrends(hotelId, 7, formattedStartDate, formattedEndDate);
+        const trendsResponse = await api.dashboard.getTrends(
+          hotelId,
+          7,
+          formattedStartDate,
+          formattedEndDate
+        );
 
         // Fetch hotels if user is super admin
         if (user?.role === UserRole.SUPER_ADMIN) {
@@ -102,7 +114,7 @@ const Dashboard: React.FC = () => {
         }
 
         if (statsResponse.success && statsResponse.data) {
-          console.log('Stats data:', statsResponse.data);
+          console.log("Stats data:", statsResponse.data);
           setStats(statsResponse.data);
         } else {
           setError(
@@ -111,28 +123,31 @@ const Dashboard: React.FC = () => {
         }
 
         if (trendsResponse.success && trendsResponse.data) {
-          console.log('API Trend Data:', trendsResponse.data);
-          
+          console.log("API Trend Data:", trendsResponse.data);
+
           // Check if we have data for July 30th
           if (trendsResponse.data.labels) {
             const july30Index = trendsResponse.data.labels.findIndex(
-              (label: string) => label.includes('2023-07-30') || label.includes('30 Jul')
+              (label: string) =>
+                label.includes("2023-07-30") || label.includes("30 Jul")
             );
-            
-            console.log('July 30th index in API data:', july30Index);
+
+            console.log("July 30th index in API data:", july30Index);
             if (july30Index !== -1) {
-              console.log('July 30th data:', {
+              console.log("July 30th data:", {
                 total: trendsResponse.data.datasets.total?.[july30Index],
-                complaint: trendsResponse.data.datasets.complaint?.[july30Index],
-                suggestion: trendsResponse.data.datasets.suggestion?.[july30Index],
-                praise: trendsResponse.data.datasets.praise?.[july30Index]
+                complaint:
+                  trendsResponse.data.datasets.complaint?.[july30Index],
+                suggestion:
+                  trendsResponse.data.datasets.suggestion?.[july30Index],
+                praise: trendsResponse.data.datasets.praise?.[july30Index],
               });
             }
           }
-          
+
           setTrendData(trendsResponse.data);
         } else {
-          console.error('Failed to fetch trend data:', trendsResponse.error);
+          console.error("Failed to fetch trend data:", trendsResponse.error);
         }
       } catch (err) {
         setError("An error occurred while fetching dashboard data");
@@ -184,28 +199,28 @@ const Dashboard: React.FC = () => {
     try {
       // Handle different date formats
       let date;
-      
+
       // Check if the date is already in a readable format like "30 Jul"
       if (/^\d{1,2}\s[A-Za-z]{3}/.test(dateString)) {
         console.log(`Date ${dateString} is already in readable format`);
         return dateString;
       }
-      
+
       // Try to parse the date
       date = new Date(dateString);
-      
+
       // Check if date is valid
       if (isNaN(date.getTime())) {
         console.error(`Invalid date string: ${dateString}`);
         return dateString; // Return original string if invalid
       }
-      
+
       // Format the date for display
       const formattedDate = date.toLocaleDateString("en-NG", {
         day: "numeric",
         month: "short",
       });
-      
+
       console.log(`Formatted date ${dateString} to ${formattedDate}`);
       return formattedDate;
     } catch (error) {
@@ -237,7 +252,7 @@ const Dashboard: React.FC = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const labels: string[] = [];
-    
+
     // Create arrays for each dataset
     const emptyData = {
       total: [] as number[],
@@ -247,21 +262,24 @@ const Dashboard: React.FC = () => {
       averageRating: [] as number[],
     };
 
-    console.log('Generating data structure for last 7 days starting from:', today.toISOString());
-    
+    console.log(
+      "Generating data structure for last 7 days starting from:",
+      today.toISOString()
+    );
+
     // Generate labels for the last 7 days
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      
+
       // Format as YYYY-MM-DD - ensure consistent format with API
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
-      
+
       labels.push(formattedDate);
-      
+
       // Initialize with zeros
       emptyData.total.push(0);
       emptyData.complaint.push(0);
@@ -269,18 +287,18 @@ const Dashboard: React.FC = () => {
       emptyData.praise.push(0);
       emptyData.averageRating.push(0);
     }
-    
-    console.log('Generated 7-day labels:', labels);
-    
+
+    console.log("Generated 7-day labels:", labels);
+
     // Check if July 30th is in our date range (for debugging)
-    const july30 = '2023-07-30';
+    const july30 = "2023-07-30";
     const july30Index = labels.indexOf(july30);
     if (july30Index !== -1) {
       console.log(`July 30th found at index ${july30Index}`);
     } else {
       console.log(`July 30th not in current 7-day range`);
     }
-    
+
     return { labels, datasets: emptyData };
   };
 
@@ -288,34 +306,51 @@ const Dashboard: React.FC = () => {
   const processApiData = () => {
     // Generate the base structure with the last 7 days
     const last7DaysData = generateLast7DaysData();
-    
+
     // If we don't have trend data from the API, return the empty structure
     if (!trendData || !trendData.labels || !trendData.datasets) {
-      console.log('No trend data available, using empty data');
+      console.log("No trend data available, using empty data");
       return last7DaysData;
     }
 
-    console.log('Processing API data:', trendData);
-    console.log('Base 7-day structure:', last7DaysData);
-    
+    console.log("Processing API data:", trendData);
+    console.log("Base 7-day structure:", last7DaysData);
+
     // Create a map of dates to make lookup faster
     const dateMap = new Map();
     last7DaysData.labels.forEach((label, index) => {
       // Store both the original format and a normalized format
       dateMap.set(label, index); // YYYY-MM-DD format
-      
+
       // Also store as MM/DD/YYYY format
       try {
         const date = new Date(label);
         if (!isNaN(date.getTime())) {
-          const altFormat = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+          const altFormat = `${
+            date.getMonth() + 1
+          }/${date.getDate()}/${date.getFullYear()}`;
           dateMap.set(altFormat, index);
-          
+
           // Also store as DD Mon YYYY format
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const altFormat2 = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+          const months = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ];
+          const altFormat2 = `${date.getDate()} ${
+            months[date.getMonth()]
+          } ${date.getFullYear()}`;
           dateMap.set(altFormat2, index);
-          
+
           // Also store as DD Mon format (without year)
           const altFormat3 = `${date.getDate()} ${months[date.getMonth()]}`;
           dateMap.set(altFormat3, index);
@@ -324,21 +359,23 @@ const Dashboard: React.FC = () => {
         console.error(`Error creating date formats for ${label}:`, e);
       }
     });
-    
-    console.log('Date map for lookup:', Array.from(dateMap.entries()));
-    
+
+    console.log("Date map for lookup:", Array.from(dateMap.entries()));
+
     // Map the API data to our 7-day structure
     trendData.labels.forEach((apiLabel, index) => {
       try {
         console.log(`Processing API label: ${apiLabel} at index ${index}`);
-        
+
         // Try to find a direct match first
         let dayIndex = -1;
-        
+
         // Check if the API label matches any of our known formats
         if (dateMap.has(apiLabel)) {
           dayIndex = dateMap.get(apiLabel);
-          console.log(`Direct match found for ${apiLabel} at index ${dayIndex}`);
+          console.log(
+            `Direct match found for ${apiLabel} at index ${dayIndex}`
+          );
         } else {
           // Try to normalize the date format
           try {
@@ -347,49 +384,97 @@ const Dashboard: React.FC = () => {
               // Try different formats
               const formats = [
                 // YYYY-MM-DD
-                `${apiDate.getFullYear()}-${String(apiDate.getMonth() + 1).padStart(2, '0')}-${String(apiDate.getDate()).padStart(2, '0')}`,
+                `${apiDate.getFullYear()}-${String(
+                  apiDate.getMonth() + 1
+                ).padStart(2, "0")}-${String(apiDate.getDate()).padStart(
+                  2,
+                  "0"
+                )}`,
                 // MM/DD/YYYY
-                `${apiDate.getMonth() + 1}/${apiDate.getDate()}/${apiDate.getFullYear()}`,
+                `${
+                  apiDate.getMonth() + 1
+                }/${apiDate.getDate()}/${apiDate.getFullYear()}`,
                 // DD Mon YYYY
-                `${apiDate.getDate()} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][apiDate.getMonth()]} ${apiDate.getFullYear()}`,
+                `${apiDate.getDate()} ${
+                  [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                  ][apiDate.getMonth()]
+                } ${apiDate.getFullYear()}`,
                 // DD Mon
-                `${apiDate.getDate()} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][apiDate.getMonth()]}`,
+                `${apiDate.getDate()} ${
+                  [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                  ][apiDate.getMonth()]
+                }`,
               ];
-              
-              console.log(`Trying normalized formats for ${apiLabel}:`, formats);
-              
+
+              console.log(
+                `Trying normalized formats for ${apiLabel}:`,
+                formats
+              );
+
               // Check each format
               for (const format of formats) {
                 if (dateMap.has(format)) {
                   dayIndex = dateMap.get(format);
-                  console.log(`Match found with format ${format} at index ${dayIndex}`);
+                  console.log(
+                    `Match found with format ${format} at index ${dayIndex}`
+                  );
                   break;
                 }
               }
-              
+
               // If still no match, try to find the closest date
               if (dayIndex === -1) {
-                console.log(`No format match found for ${apiLabel}, trying closest date`);
-                
+                console.log(
+                  `No format match found for ${apiLabel}, trying closest date`
+                );
+
                 // Find the closest date by timestamp difference
                 let closestIndex = -1;
                 let minDifference = Infinity;
-                
+
                 last7DaysData.labels.forEach((label, labelIndex) => {
                   const labelDate = new Date(label);
                   if (!isNaN(labelDate.getTime())) {
-                    const difference = Math.abs(labelDate.getTime() - apiDate.getTime());
-                    
+                    const difference = Math.abs(
+                      labelDate.getTime() - apiDate.getTime()
+                    );
+
                     if (difference < minDifference) {
                       minDifference = difference;
                       closestIndex = labelIndex;
                     }
                   }
                 });
-                
+
                 if (closestIndex !== -1) {
                   dayIndex = closestIndex;
-                  console.log(`Found closest date match at index ${dayIndex}: ${last7DaysData.labels[dayIndex]}`);
+                  console.log(
+                    `Found closest date match at index ${dayIndex}: ${last7DaysData.labels[dayIndex]}`
+                  );
                 }
               }
             }
@@ -397,39 +482,63 @@ const Dashboard: React.FC = () => {
             console.error(`Error normalizing date ${apiLabel}:`, e);
           }
         }
-        
+
         // If we found a matching day, update the data for that day
         if (dayIndex !== -1) {
-          console.log(`Updating data at index ${dayIndex} with values from API index ${index}`);
-          
-          if (trendData.datasets.total && trendData.datasets.total[index] !== undefined) {
-            last7DaysData.datasets.total[dayIndex] = trendData.datasets.total[index];
+          console.log(
+            `Updating data at index ${dayIndex} with values from API index ${index}`
+          );
+
+          if (
+            trendData.datasets.total &&
+            trendData.datasets.total[index] !== undefined
+          ) {
+            last7DaysData.datasets.total[dayIndex] =
+              trendData.datasets.total[index];
           }
-          
-          if (trendData.datasets.complaint && trendData.datasets.complaint[index] !== undefined) {
-            last7DaysData.datasets.complaint[dayIndex] = trendData.datasets.complaint[index];
+
+          if (
+            trendData.datasets.complaint &&
+            trendData.datasets.complaint[index] !== undefined
+          ) {
+            last7DaysData.datasets.complaint[dayIndex] =
+              trendData.datasets.complaint[index];
           }
-          
-          if (trendData.datasets.suggestion && trendData.datasets.suggestion[index] !== undefined) {
-            last7DaysData.datasets.suggestion[dayIndex] = trendData.datasets.suggestion[index];
+
+          if (
+            trendData.datasets.suggestion &&
+            trendData.datasets.suggestion[index] !== undefined
+          ) {
+            last7DaysData.datasets.suggestion[dayIndex] =
+              trendData.datasets.suggestion[index];
           }
-          
-          if (trendData.datasets.praise && trendData.datasets.praise[index] !== undefined) {
-            last7DaysData.datasets.praise[dayIndex] = trendData.datasets.praise[index];
+
+          if (
+            trendData.datasets.praise &&
+            trendData.datasets.praise[index] !== undefined
+          ) {
+            last7DaysData.datasets.praise[dayIndex] =
+              trendData.datasets.praise[index];
           }
-          
-          if (trendData.datasets.averageRating && trendData.datasets.averageRating[index] !== undefined) {
-            last7DaysData.datasets.averageRating[dayIndex] = trendData.datasets.averageRating[index];
+
+          if (
+            trendData.datasets.averageRating &&
+            trendData.datasets.averageRating[index] !== undefined
+          ) {
+            last7DaysData.datasets.averageRating[dayIndex] =
+              trendData.datasets.averageRating[index];
           }
         } else {
-          console.warn(`Could not find a matching day for API label ${apiLabel}`);
+          console.warn(
+            `Could not find a matching day for API label ${apiLabel}`
+          );
         }
       } catch (error) {
         console.error(`Error processing API label ${apiLabel}:`, error);
       }
     });
-    
-    console.log('Final processed data:', last7DaysData);
+
+    console.log("Final processed data:", last7DaysData);
     return last7DaysData;
   };
 
@@ -440,38 +549,38 @@ const Dashboard: React.FC = () => {
   const lineChartData = {
     labels: chartData.labels.map((label) => {
       // Format date labels to be more readable
-      return label.includes('-') ? formatDateLabel(label) : label;
+      return label.includes("-") ? formatDateLabel(label) : label;
     }),
     datasets: [
       {
-        label: 'Total Feedback',
+        label: "Total Feedback",
         data: visibleDatasets.total ? chartData.datasets.total : [],
-        borderColor: '#7A4FFF',
-        backgroundColor: 'rgba(122, 79, 255, 0.1)',
+        borderColor: "#7A4FFF",
+        backgroundColor: "rgba(122, 79, 255, 0.1)",
         tension: 0.4,
         fill: true,
       },
       {
-        label: 'Complaints',
+        label: "Complaints",
         data: visibleDatasets.complaint ? chartData.datasets.complaint : [],
-        borderColor: '#FF5A5A',
-        backgroundColor: 'transparent',
+        borderColor: "#FF5A5A",
+        backgroundColor: "transparent",
         tension: 0.4,
         fill: false,
       },
       {
-        label: 'Suggestions',
+        label: "Suggestions",
         data: visibleDatasets.suggestion ? chartData.datasets.suggestion : [],
-        borderColor: '#FFB74D',
-        backgroundColor: 'transparent',
+        borderColor: "#FFB74D",
+        backgroundColor: "transparent",
         tension: 0.4,
         fill: false,
       },
       {
-        label: 'Praise',
+        label: "Praise",
         data: visibleDatasets.praise ? chartData.datasets.praise : [],
-        borderColor: '#4CAF50',
-        backgroundColor: 'transparent',
+        borderColor: "#4CAF50",
+        backgroundColor: "transparent",
         tension: 0.4,
         fill: false,
       },
@@ -479,15 +588,15 @@ const Dashboard: React.FC = () => {
       ...(chartData.datasets.averageRating
         ? [
             {
-              label: 'Average Rating',
+              label: "Average Rating",
               data: visibleDatasets.averageRating
                 ? chartData.datasets.averageRating
                 : [],
-              borderColor: '#00BCD4',
-              backgroundColor: 'transparent',
+              borderColor: "#00BCD4",
+              backgroundColor: "transparent",
               tension: 0.4,
               fill: false,
-              yAxisID: 'y1', // Use secondary y-axis
+              yAxisID: "y1", // Use secondary y-axis
             },
           ]
         : []),
@@ -499,7 +608,7 @@ const Dashboard: React.FC = () => {
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
-      mode: 'index' as const,
+      mode: "index" as const,
       intersect: false,
     },
     elements: {
@@ -516,8 +625,8 @@ const Dashboard: React.FC = () => {
     plugins: {
       legend: {
         display: true,
-        position: 'top' as const,
-        align: 'center' as const,
+        position: "top" as const,
+        align: "center" as const,
         labels: {
           boxWidth: 12,
           padding: 15,
@@ -531,7 +640,7 @@ const Dashboard: React.FC = () => {
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
         padding: 10,
         titleFont: {
           size: 14,
@@ -552,9 +661,9 @@ const Dashboard: React.FC = () => {
     },
     scales: {
       y: {
-        type: 'linear' as const,
+        type: "linear" as const,
         display: true,
-        position: 'left' as const,
+        position: "left" as const,
         beginAtZero: true,
         ticks: {
           precision: 0,
@@ -563,19 +672,19 @@ const Dashboard: React.FC = () => {
           },
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: "rgba(0, 0, 0, 0.05)",
         },
         suggestedMax: 20, // Adjust this based on your data
         title: {
           display: true,
-          text: 'Number of Feedback',
+          text: "Number of Feedback",
         },
       },
       y1: {
-        type: 'linear' as const,
+        type: "linear" as const,
         display:
           chartData.datasets.averageRating && visibleDatasets.averageRating,
-        position: 'right' as const,
+        position: "right" as const,
         beginAtZero: true,
         min: 0,
         max: 5,
@@ -591,7 +700,7 @@ const Dashboard: React.FC = () => {
         },
         title: {
           display: true,
-          text: 'Average Rating',
+          text: "Average Rating",
         },
       },
       x: {
@@ -827,7 +936,8 @@ const Dashboard: React.FC = () => {
               {stats.recentFeedback.map((feedback) => (
                 <div
                   key={feedback.id}
-                  className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50"
+                  className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => navigate(`/feedback/${feedback.id || feedback._id}`)}
                 >
                   <div className="flex flex-wrap justify-between mb-2">
                     <div className="flex items-center space-x-2 mb-1">

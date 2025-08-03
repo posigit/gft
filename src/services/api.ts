@@ -649,7 +649,7 @@ export const api = {
       try {
         const params = new URLSearchParams();
         if (hotelId) params.append("hotelId", hotelId);
-        
+
         // If start and end dates are provided, use them instead of days
         if (startDate && endDate) {
           params.append("startDate", startDate);
