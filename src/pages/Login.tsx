@@ -129,17 +129,7 @@ const Login: React.FC = () => {
               </button>
             </div>
 
-            <div className="text-center text-sm text-subtext">
-              <p>
-                For demo purposes:
-                <br />
-                Hotel Admin: reliance@presken.com / reliance123
-                <br />
-                Hotel Admin: castle@presken.com / castle123
-                <br />
-                Hotel Admin: awolowo@presken.com / awolowo111
-              </p>
-            </div>
+          
           </form>
         </div>
       </div>
